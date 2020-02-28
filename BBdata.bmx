@@ -1,1 +1,1 @@
-Global PointsFL:int=986
+Global PointsFL:int=0
