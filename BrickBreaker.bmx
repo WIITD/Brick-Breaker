@@ -1,6 +1,6 @@
 SuperStrict
 
-Include "JABOC_BMAX.bmx"
+Include "BBdata.bmx"
 
 '----------------------------------------Data----------------------------------------
 Const PLAY:Int=1
@@ -79,7 +79,7 @@ LoadBall()
 '--------------------------------	
 	
 'setup
-AppTitle="Just Another Breakout Clone"
+AppTitle="Brick Breaker"
 Graphics Width,Height
 AutoMidHandle True
 HideMouse()
@@ -481,7 +481,7 @@ Function UpdateGameState()
 
             If KeyHit(KEY_ESCAPE) Or AppTerminate()
 				ClearList GameObjectList
-				TText.Create("JUST ANOTHER BREAKOUT CLONE",Font,300,5)    
+				TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
 				TText.Create("PRESS <ENTER> To START",Font,110,250)
 				TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 				TText.Create("Your Score: "+Points,Font,80,400)'Points
@@ -521,7 +521,7 @@ Function UpdateGameState()
 			If KeyHit(KEY_ESCAPE)
 				ClearList GameObjectList
 				CreateBricks()
-				TText.Create("JUST ANOTHER BREAKOUT CLONE",Font,300,5)    
+				TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
 				TText.Create("PRESS <ENTER> To START",Font,110,250)
 				TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 				TText.Create("CONTROLS: Left and Right arrow to control Puddle, Space to Pause, Escape to enter to the menu",Font,10,570)
@@ -623,7 +623,7 @@ Function UpdateGameState()
 		
 		Case MENU
 		
-			TText.Create("JUST ANOTHER BREAKOUT CLONE",Font,(Width/2)-100,5)    
+			TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
 			TText.Create("PRESS <ENTER> To START",Font,110,250)
 			TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 			TText.Create("High Score: "+PointsFL,Font,80,400)'PointsFL
