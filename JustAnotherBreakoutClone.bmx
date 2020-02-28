@@ -11,13 +11,14 @@ Const GAMEOVER:Int=0
 Const MENU:Int=6
 Const NEXTGAME:Int=5
 Const REMENU:Int=42
+Global HARDMODE:Int=False
 Global GameState:String=MENU
 Global HEALTH:Int=5
 Const PLAYER_LAYER:Int=1
 Const DZ_LAYER:Int=2
 Global GameObjectList:TList=CreateList()
-Global Width:Int=800
-Global Height:Int=600
+Global Width:Int=1280
+Global Height:Int=720
 Global puddlex:Int=width/2
 Global puddley:Int=500
 Global brickx:Int=4
@@ -25,12 +26,12 @@ Global brick:String="brick1.png"
 Global player:String="player1.png"
 Global ball:String="ball1.png"
 Global randballspawn:Int
-Global brickrand:Int=Rand(1,4)
+Global brickrand:Int=Rand(1,3)
 Global playerrand:Int=Rand(1,3)
 Global ballrand:Int=Rand(1,3)
 Global SCORE:Int=1
 Global Points:Int=0
-'-----------------------------------
+'-----------------------------------loading random brick sprite
 Function LoadBrick()
 	If brickrand=1
 		brick="brick1.png"
@@ -43,13 +44,9 @@ Function LoadBrick()
 	If brickrand=3
 		brick="brick3.png"
 	EndIf
-	
-	If brickrand=4
-		brick="brick4.png"
-	EndIf
 EndFunction
 LoadBrick()
-'-----------------------------------
+'-----------------------------------loading random player/puddle sprite
 Function LoadPlayer()
 	If playerrand=1
 		player="player1.png"
@@ -64,7 +61,7 @@ Function LoadPlayer()
 	EndIf
 EndFunction
 LoadPlayer()
-'----------------------------------
+'----------------------------------loading random ball sprite
 Function LoadBall()
 	If ballrand=1
 		ball="ball1.svg"
@@ -81,23 +78,26 @@ EndFunction
 LoadBall()
 '--------------------------------	
 	
-
+'setup
 AppTitle="Just Another Breakout Clone"
 Graphics Width,Height
 AutoMidHandle True
 HideMouse()
 
-Global Font:TImageFont=LoadImageFont("Data\Font\Blitzwing.otf",24)
+Global Font:TImageFont=LoadImageFont("Data\Font\Pixel Bug.otf",24,SMOOTHFONT)
 
+'loading sounds
 Global PCS:TSound=LoadSound("Data\Sounds\PCS.wav",False)
 Global BCS:TSound=LoadSound("Data\Sounds\BCS.wav",False)
 Global PUS:TSound=LoadSound("Data\Sounds\PUS.wav",False)
 Global WINS:TSound=LoadSound("Data\Sounds\WINS.wav",False)
 Global BEX:TSound=LoadSound("Data\Sounds\BEX.wav",False)
 Global GOS:TSound=LoadSound("Data\Sounds\GOS.wav",False)
+
+'loading images
 TBall.Create(LoadImage("Data\Ball\"+ball),puddlex,puddley)
 TPaddle.Create(LoadImage("Data\Player\"+player),puddlex,puddley)
-TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),400,598)
+TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 Global Bricks:TImage=LoadAnimImage("Data\Brick\"+brick,32,20,0,1)
 CreateBricks()
 
@@ -107,7 +107,7 @@ Repeat
 	Cls
 	If GameState=PLAY Or GameState=PAUSE
 		SetColor(0,255,0)
-		DrawText("HEALTH: "+HEALTH,595,5)
+		DrawText("HEALTH: "+HEALTH,(Width/2)-100,6)
 		SetColor(255,255,255)
 	EndIf
 	UpdateGameState()
@@ -116,10 +116,8 @@ Repeat
 		o.DrawSelf()
 		o.UpdateSelf()
 	Next
-	Flip 
+	Flip(0) 
 Forever
-    
-End
 
 
 '----------------------------------------TYPES----------------------------------------
@@ -127,8 +125,8 @@ Type TGameObject
 
     Field X:Int
     Field Y:Int
-    Field XSpeed:Float=6
-    Field YSpeed:Float=-6
+    Field XSpeed:Float=6.0
+    Field YSpeed:Float=-6.0
     Field Image:TImage
     Field XScale:Float=0.1
     Field YScale:Float=0.1
@@ -136,7 +134,7 @@ Type TGameObject
 
     Method DrawSelf()
 		SetScale XScale, YScale
-         SetRotation Rotation
+        SetRotation Rotation
         DrawImage Image,X,Y
     End Method     
 
@@ -149,33 +147,47 @@ Type TBall Extends TGameObject
 	
     Function Create:TBall(Image:TImage,xstart:Int,ystart:Int)
         Local B:TBall=New TBall
-        CreateObject(B,Image,xstart,ystart)
+		CreateObject(B,Image,xstart,ystart)
         Return B
     End Function
 
     Method UpdateSelf()
 		If GameState<>PLAY Then Return
-
-        X :+ XSpeed 
-		Y :+ YSpeed 
+		
+		If HARDMODE=True
+			X :+ XSpeed *2
+			Y :+ YSpeed *2
+		Else
+			X :+ XSpeed
+			Y :+ YSpeed *1.2
+		EndIf
        
-        If x>Width Or x<0 Then 
-           XSpeed=-XSpeed         
+        If X>1260 Or X<0 Then 
+		   XSpeed=-XSpeed        
         EndIf
         If Y>Height Or Y<0 Then  
            YSpeed=-YSpeed          
-        EndIf
+		EndIf
 		
+		If X>1265 Then
+			X = 1255
+		EndIf
+		
+		If X<-5 Then
+			X = 5
+		EndIf
+				
 		 CheckCollision()
    
    End Method
 
 	Method CheckCollision()
-        SetScale XScale, YScale
+        SetScale XScale+1, YScale+1
         SetRotation Rotation
         If CollideImage(Image,X,Y,0,PLAYER_LAYER,1)
 			PlaySound PCS
-           YSpeed=-YSpeed
+			X=X-10
+            YSpeed=-YSpeed
         EndIf
 
 		For Local b:TBricks=EachIn GameObjectList
@@ -183,8 +195,14 @@ Type TBall Extends TGameObject
                ListRemove(GameObjectList,b)
 				PlaySound BCS
 				randballspawn=Rand(0,100)
-                YSpeed=-YSpeed
-				Points=Points+1
+				YSpeed=-YSpeed
+				
+				If HARDMODE=True
+					Points=Points+5
+				Else
+					Points=Points+1
+				EndIf	
+				
 			 EndIf
         Next
 		
@@ -209,15 +227,15 @@ Type TPaddle Extends TGameObject
     Function Create:TPaddle(Image:TImage,xstart:Int,ystart:Int)
         Local B:TPaddle=New TPaddle
         CreateObject(B,Image,xstart,ystart)
-        B.XSpeed :* 1   
-        B.YSpeed :* 1  
+        B.XSpeed :* 3  
+		B.YSpeed :* 3
         Return B
     End Function
 
     Method UpdateSelf()
         
-        If KeyDown(KEY_Left) X :- XSpeed+2
-        If KeyDown(KEY_Right) X :+ XSpeed+2
+        If KeyDown(KEY_Left) X :- XSpeed+3
+        If KeyDown(KEY_Right) X :+ XSpeed+3
         Y = height-60  
       
         If X<ImageWidth(Image)/2 X=ImageWidth(Image)/2
@@ -239,7 +257,7 @@ Type TBricks Extends TGameObject
         Return B
     End Function
 
-    Method UpdateSelf()
+	Method UpdateSelf()
     End Method
 	
 EndType
@@ -282,8 +300,14 @@ Type TBonusBall Extends TGameObject
             If ImagesCollide2(Image,X,Y,0,Rotation,XScale,YScale, b.Image, b.X, b.Y, 0, 0, 1.0, 1.0)
                ListRemove(GameObjectList,b)
 				PlaySound BCS
-                YSpeed=-YSpeed
-				Points=Points+1
+				YSpeed=-YSpeed
+				
+				If HARDMODE=True 
+					Points=Points+Rand(1,5)
+				Else
+					Points=Points+Rand(1,2)
+				EndIf
+				
 			 	Exit
 			 EndIf
         Next
@@ -401,14 +425,15 @@ Function CreateObject(Obj:TGameObject, Image:TImage,xstart:Int,ystart:Int,Scale:
 End Function
 
 Function CreateBall()
+	ballrand=Rand(1,3)
 	LoadBall()
 	TBall.Create(LoadImage("Data\Ball\"+ball),puddlex,puddley-10)
 EndFunction
 
 Function CreateBricks()
-	brickrand:Int=Rand(1,4)
+	brickrand=Rand(1,3)
 	LoadBrick()
-	For Local x:Int=0 To 22
+	For Local x:Int=0 To 36
 		For Local y:Int=0 To brickx
 		TBricks.Create(Bricks,24+x*34,50+y*22)
 		Next
@@ -508,9 +533,9 @@ Function UpdateGameState()
  
 		Case WAIT  
 			
-			brickrand:Int=Rand(1,4)
-			playerrand:Int=Rand(1,3)
-			ballrand:Int=Rand(1,3)
+			brickrand=Rand(1,4)
+			playerrand=Rand(1,3)
+			ballrand=Rand(1,3)
 			LoadBrick()
 			LoadPlayer()
 			LoadBall()
@@ -518,29 +543,57 @@ Function UpdateGameState()
 
             If KeyHit(KEY_ESCAPE) Or AppTerminate()
                End
-            EndIf
+			EndIf
+			
+			If HARDMODE=True
+				DrawText("Press F to disable HARDMODE: ON",10,590)
+			Else
+				DrawText("Press F to enable HARDMODE: OFF",10,590)
+			EndIf
+			
+			If KeyHit(KEY_F) 
+				If HARDMODE=False
+					HARDMODE=True
+				ElseIf HARDMODE=True
+					HARDMODE=False
+				EndIf
+			EndIf
            
             If KeyHit(KEY_ENTER)
-              ClearList GameObjectList
+                ClearList GameObjectList
                 TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
                 TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
-				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),400,598)
+				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 				TScore.Create("BRICKS:",Font,20,5)
                 CreateBricks()
 				HEALTH=5
 				SCORE=1
 				Points=0
-               GameState=PLAY
+                GameState=PLAY
             EndIf
             FlushKeys()   
 		
 		Case NEXTGAME
 			
+			If HARDMODE=True
+				DrawText("Press F to disable HARDMODE: ON",10,590)
+			Else
+				DrawText("Press F to enable HARDMODE: OFF",10,590)
+			EndIf
+			
+			If KeyHit(KEY_F) 
+				If HARDMODE=False
+					HARDMODE=True
+				ElseIf HARDMODE=True
+					HARDMODE=False
+				EndIf
+			EndIf
+			
 			If KeyHit(KEY_ENTER)
               ClearList GameObjectList
                 TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
                 TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
-				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),400,598)
+				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 				TScore.Create("BRICKS:",Font,20,5)
                 CreateBricks()
                GameState=PLAY
@@ -570,14 +623,28 @@ Function UpdateGameState()
 		
 		Case MENU
 		
-			TText.Create("JUST ANOTHER BREAKOUT CLONE",Font,300,5)    
+			TText.Create("JUST ANOTHER BREAKOUT CLONE",Font,(Width/2)-100,5)    
 			TText.Create("PRESS <ENTER> To START",Font,110,250)
 			TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 			TText.Create("High Score: "+PointsFL,Font,80,400)'PointsFL
 			TText.Create("Press R to reset the High score",Font,80,450)
 			TText.Create("CONTROLS: Left and Right arrow to control Puddle, Space to Pause, Escape to enter to the menu",Font,10,570)
 			TText.Create("Warning: This game contains loud noises!",Font,10,550)
-						
+			
+			If HARDMODE=True
+				DrawText("Press F to disable HARDMODE: ON",10,590)
+			Else
+				DrawText("Press F to enable HARDMODE: OFF",10,590)
+			EndIf
+			
+			If KeyHit(KEY_F) 
+				If HARDMODE=False
+					HARDMODE=True
+				ElseIf HARDMODE=True
+					HARDMODE=False
+				EndIf
+			EndIf
+			
 			If KeyHit(KEY_ENTER)
 				For Local o:TText=EachIn GameObjectList
                     ListRemove(GameObjectList,o)
@@ -611,7 +678,7 @@ Function UpdateGameState()
 		CreateBricks()
 		TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
         TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
-		TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),400,598)
+		TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 		GameState=MENU
 					
      EndSelect
