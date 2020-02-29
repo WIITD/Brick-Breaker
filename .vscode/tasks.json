@@ -6,14 +6,14 @@
         {
             "type": "bmx",
             "source": "${relativeFile}",
-            "output": "",
+            "output": "Brick Breaker",
             "make": "makeapp",
             "app": "gui",
             "arch": "x64",
             "platform": "linux",
             "threaded": true,
             "debug": false,
-            "quick": true,
+            "quick": false,
             "execute": true,
             "verbose": false,
             "problemMatcher": [

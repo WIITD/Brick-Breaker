@@ -64,7 +64,7 @@ LoadPlayer()
 '----------------------------------loading random ball sprite
 Function LoadBall()
 	If ballrand=1
-		ball="ball1.svg"
+		ball="ball1.png"
 	EndIf
 	
 	If ballrand=2
@@ -162,7 +162,7 @@ Type TBall Extends TGameObject
 			Y :+ YSpeed *1.2
 		EndIf
        
-        If X>1260 Or X<0 Then 
+        If X>Width-20 Or X<0 Then 
 		   XSpeed=-XSpeed        
         EndIf
         If Y>Height Or Y<0 Then  
@@ -186,7 +186,7 @@ Type TBall Extends TGameObject
         SetRotation Rotation
         If CollideImage(Image,X,Y,0,PLAYER_LAYER,1)
 			PlaySound PCS
-			X=X-10
+			Y=645
             YSpeed=-YSpeed
         EndIf
 
@@ -236,7 +236,7 @@ Type TPaddle Extends TGameObject
         
         If KeyDown(KEY_Left) X :- XSpeed+3
         If KeyDown(KEY_Right) X :+ XSpeed+3
-        Y = height-60  
+		Y = height-60  
       
         If X<ImageWidth(Image)/2 X=ImageWidth(Image)/2
         If X>(Width-ImageWidth(Image)/2) X=(Width-ImageWidth(Image)/2) 
@@ -362,7 +362,7 @@ Type TText Extends TGameObject
         SetImageFont(Font)
         SetRotation 0
         SetScale 1.0,1.0
-        DrawText Text,X,Y
+		DrawText Text,X,Y
     End Method
 
 EndType
@@ -416,8 +416,12 @@ Function CreateObject(Obj:TGameObject, Image:TImage,xstart:Int,ystart:Int,Scale:
         Obj.Image=Image
 
        If Obj.Image=Null
-           Print "Not able to load image file. Program aborting"
-           End
+		   Print "Not able to load image file. Program aborting"
+		   Print Obj.X
+		   Print Obj.Y 
+		   Print Obj.XScale
+		   Print Obj.YScale
+		   End
        EndIf
 
         ListAddLast GameObjectList, Obj 
@@ -431,7 +435,7 @@ Function CreateBall()
 EndFunction
 
 Function CreateBricks()
-	brickrand=Rand(1,3)
+	'brickrand=Rand(1,3)
 	LoadBrick()
 	For Local x:Int=0 To 36
 		For Local y:Int=0 To brickx
@@ -443,8 +447,8 @@ EndFunction
 Function FPoints()
 	If GameState=GAMEOVER Or HEALTH=0
 		If PointsFL<Points			
-			Local JABOC_BMAXsettings_write:TStream=WriteFile("JABOC_BMAX.bmx")
-				If Not JABOC_BMAXsettings_write Then CreateFile("JABOC_BMAX.bmx")
+			Local JABOC_BMAXsettings_write:TStream=WriteFile("BBdata")
+				If Not JABOC_BMAXsettings_write Then CreateFile("BBdata.bmx")
 				WriteLine JABOC_BMAXsettings_write,"Global PointsFL:int="+Points
 			CloseStream JABOC_BMAXsettings_write
 		EndIf			
@@ -452,8 +456,8 @@ Function FPoints()
 EndFunction
 
 Function ClearFPoints()
-	Local JABOC_BMAXsettings_write:TStream=WriteFile("JABOC_BMAX.bmx")
-		If Not JABOC_BMAXsettings_write Then CreateFile("JABOC_BMAX.bmx")
+	Local JABOC_BMAXsettings_write:TStream=WriteFile("BBdata.bmx")
+		If Not JABOC_BMAXsettings_write Then CreateFile("BBdata.bmx")
 		WriteLine JABOC_BMAXsettings_write,"Global PointsFL:int=0"
 	CloseStream JABOC_BMAXsettings_write
 EndFunction
@@ -479,7 +483,7 @@ Function UpdateGameState()
 			
 			'If KeyHit(KEY_O) Then GameState=GAMEOVER
 
-            If KeyHit(KEY_ESCAPE) Or AppTerminate()
+            If KeyHit(KEY_ESCAPE) 'Or AppTerminate()
 				ClearList GameObjectList
 				TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
 				TText.Create("PRESS <ENTER> To START",Font,110,250)
@@ -590,13 +594,13 @@ Function UpdateGameState()
 			EndIf
 			
 			If KeyHit(KEY_ENTER)
-              ClearList GameObjectList
+                ClearList GameObjectList
                 TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
                 TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
 				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 				TScore.Create("BRICKS:",Font,20,5)
                 CreateBricks()
-               GameState=PLAY
+                GameState=PLAY
             EndIf
 
 			If KeyHit(KEY_ESCAPE)
