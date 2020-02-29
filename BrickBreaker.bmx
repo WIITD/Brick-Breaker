@@ -84,7 +84,7 @@ Graphics Width,Height
 AutoMidHandle True
 HideMouse()
 
-Global Font:TImageFont=LoadImageFont("Data\Font\Pixel Bug.otf",24,SMOOTHFONT)
+Global Font:TImageFont=LoadImageFont("Data\Font\hemi head bd it.ttf",24,SMOOTHFONT)
 
 'loading sounds
 Global PCS:TSound=LoadSound("Data\Sounds\PCS.wav",False)
@@ -116,7 +116,7 @@ Repeat
 		o.DrawSelf()
 		o.UpdateSelf()
 	Next
-	Flip(0) 
+	Flip() 
 Forever
 
 
