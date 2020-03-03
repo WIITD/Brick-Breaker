@@ -31,6 +31,10 @@ Global playerrand:Int=Rand(1,3)
 Global ballrand:Int=Rand(1,3)
 Global SCORE:Int=1
 Global Points:Int=0
+Global ComboBreaker:Int
+
+Global BallSpeedX:Int=Rand(3,9)
+
 '-----------------------------------loading random brick sprite
 Function LoadBrick()
 	If brickrand=1
@@ -107,7 +111,8 @@ Repeat
 	Cls
 	If GameState=PLAY Or GameState=PAUSE
 		SetColor(0,255,0)
-		DrawText("HEALTH: "+HEALTH,(Width/2)-100,6)
+		DrawText("Balls: "+HEALTH,(Width/2)-100,6)
+		DrawText("COMBO: "+ComboBreaker,1125,6)
 		SetColor(255,255,255)
 	EndIf
 	UpdateGameState()
@@ -155,21 +160,21 @@ Type TBall Extends TGameObject
 		If GameState<>PLAY Then Return
 		
 		If HARDMODE=True
-			X :+ XSpeed *2
+			X :+ BallSpeedX *2
 			Y :+ YSpeed *2
 		Else
-			X :+ XSpeed
+			X :+ BallSpeedX
 			Y :+ YSpeed *1.2
 		EndIf
        
         If X>Width-20 Or X<0 Then 
-		   XSpeed=-XSpeed        
+			BallSpeedX=-BallSpeedX       
         EndIf
         If Y>Height Or Y<0 Then  
            YSpeed=-YSpeed          
 		EndIf
 		
-		If X>1265 Then
+		If X>1260 Then
 			X = 1255
 		EndIf
 		
@@ -187,20 +192,37 @@ Type TBall Extends TGameObject
         If CollideImage(Image,X,Y,0,PLAYER_LAYER,1)
 			PlaySound PCS
 			Y=645
+			
+			If HARDMODE=True
+				Points=Points+(6*ComboBreaker)
+				ComboBreaker=0
+			Else
+				Points=Points+(2*ComboBreaker)
+				ComboBreaker=0
+			EndIf
+			
+			If BallSpeedX<0
+				BallSpeedX=Rand(-3,-9)
+			Else
+				BallSpeedX=Rand(3,9)
+			EndIf
+			
             YSpeed=-YSpeed
-        EndIf
+		EndIf
 
 		For Local b:TBricks=EachIn GameObjectList
             If ImagesCollide2(Image,X,Y,0,Rotation,XScale,YScale, b.Image, b.X, b.Y, 0, 0, 1.0, 1.0)
-               ListRemove(GameObjectList,b)
+                ListRemove(GameObjectList,b)
 				PlaySound BCS
-				randballspawn=Rand(0,100)
+				randballspawn=Rand(0,50)
 				YSpeed=-YSpeed
 				
 				If HARDMODE=True
-					Points=Points+5
+					Points=Points+6
+					ComboBreaker=ComboBreaker+3
 				Else
-					Points=Points+1
+					Points=Points+2
+					ComboBreaker=ComboBreaker+1
 				EndIf	
 				
 			 EndIf
@@ -211,6 +233,7 @@ Type TBall Extends TGameObject
 				HEALTH=HEALTH-1
 				ListRemove(GameObjectList,Self)
 				PlaySound BEX
+				ComboBreaker=0
 				CreateBall()
 			EndIf
 		Next
@@ -447,7 +470,7 @@ EndFunction
 Function FPoints()
 	If GameState=GAMEOVER Or HEALTH=0
 		If PointsFL<Points			
-			Local JABOC_BMAXsettings_write:TStream=WriteFile("BBdata")
+			Local JABOC_BMAXsettings_write:TStream=WriteFile("BBdata.bmx")
 				If Not JABOC_BMAXsettings_write Then CreateFile("BBdata.bmx")
 				WriteLine JABOC_BMAXsettings_write,"Global PointsFL:int="+Points
 			CloseStream JABOC_BMAXsettings_write
@@ -469,13 +492,13 @@ Function UpdateGameState()
     
     Case PLAY  
 			
-			If randballspawn=99 'Or KeyHit(KEY_P)
+			If randballspawn=48 'Or 36 'Or KeyHit(KEY_P)
 				TBonusBall.Create(LoadImage("Data\Ball\bonusball.png"),puddlex,puddley)
 				Points=Points+2
 				randballspawn=0
 			EndIf
 			
-			If randballspawn=46
+			If randballspawn=46 'Or 15
 				HEALTH=HEALTH+1
 				Points=Points+2
 				randballspawn=0
