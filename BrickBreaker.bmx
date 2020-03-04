@@ -110,9 +110,9 @@ Repeat
 	SetColor 255,255,255
 	Cls
 	If GameState=PLAY Or GameState=PAUSE
-		SetColor(0,255,0)
+		SetColor(0,235,0)
 		DrawText("Balls: "+HEALTH,(Width/2)-100,6)
-		DrawText("COMBO: "+ComboBreaker,1125,6)
+		DrawText("Combo: "+ComboBreaker,1120,6)
 		SetColor(255,255,255)
 	EndIf
 	UpdateGameState()
@@ -202,9 +202,9 @@ Type TBall Extends TGameObject
 			EndIf
 			
 			If BallSpeedX<0
-				BallSpeedX=Rand(-3,-9)
+				BallSpeedX=Rand(-3,-12)
 			Else
-				BallSpeedX=Rand(3,9)
+				BallSpeedX=Rand(3,12)
 			EndIf
 			
             YSpeed=-YSpeed
