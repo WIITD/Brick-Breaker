@@ -11,8 +11,9 @@ Const GAMEOVER:Int=0
 Const MENU:Int=6
 Const NEXTGAME:Int=5
 Const REMENU:Int=42
+Const INTRO:Int=8
 Global HARDMODE:Int=False
-Global GameState:String=MENU
+Global GameState:String=INTRO
 Global HEALTH:Int=5
 Const PLAYER_LAYER:Int=1
 Const DZ_LAYER:Int=2
@@ -33,7 +34,9 @@ Global SCORE:Int=1
 Global Points:Int=0
 Global ComboBreaker:Int
 
-Global BallSpeedX:Int=Rand(3,9)
+Global IntroTimeWait:Int=150
+
+Global BallSpeedX:Int=Rand(3,12)
 
 '-----------------------------------loading random brick sprite
 Function LoadBrick()
@@ -103,6 +106,7 @@ TBall.Create(LoadImage("Data\Ball\"+ball),puddlex,puddley)
 TPaddle.Create(LoadImage("Data\Player\"+player),puddlex,puddley)
 TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
 Global Bricks:TImage=LoadAnimImage("Data\Brick\"+brick,32,20,0,1)
+Global Banner:TImage=LoadImage("Data\Misc\banner.png", -1)
 CreateBricks()
 
 '----------------------------------------MAIN LOOP----------------------------------------
@@ -113,8 +117,9 @@ Repeat
 		SetColor(0,235,0)
 		DrawText("Balls: "+HEALTH,(Width/2)-100,6)
 		DrawText("Combo: "+ComboBreaker,1120,6)
+		DrawText("Points: "+Points, 250, 6 )
 		SetColor(255,255,255)
-	EndIf
+	EndIf	
 	UpdateGameState()
 	
 	For Local o:TGameObject=EachIn GameObjectList
@@ -489,16 +494,35 @@ EndFunction
 Function UpdateGameState()
 
     Select GameState
-    
+	
+	Case INTRO
+		
+		ClearList GameObjectList
+		
+		DrawImage(Banner, (Width/2), Height/2, 0)
+		
+		If (IntroTimeWait=0)
+			ClearList GameObjectList
+			TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
+    		TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
+			TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
+    		CreateBricks()
+			GameState=MENU
+		EndIf
+		
+		IntroTimeWait = IntroTimeWait - 1
+				
+		FlushKeys()
+		
     Case PLAY  
 			
-			If randballspawn=48 'Or 36 'Or KeyHit(KEY_P)
+			If randballspawn=48 
 				TBonusBall.Create(LoadImage("Data\Ball\bonusball.png"),puddlex,puddley)
 				Points=Points+2
 				randballspawn=0
 			EndIf
 			
-			If randballspawn=46 'Or 15
+			If randballspawn=46
 				HEALTH=HEALTH+1
 				Points=Points+2
 				randballspawn=0
@@ -506,7 +530,7 @@ Function UpdateGameState()
 			
 			'If KeyHit(KEY_O) Then GameState=GAMEOVER
 
-            If KeyHit(KEY_ESCAPE) 'Or AppTerminate()
+            If KeyHit(KEY_ESCAPE)
 				ClearList GameObjectList
 				TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
 				TText.Create("PRESS <ENTER> To START",Font,110,250)
@@ -556,6 +580,7 @@ Function UpdateGameState()
 				SCORE=1
 				GameState=WAIT
 			EndIf
+			
             FlushKeys() 
  
 		Case WAIT  
@@ -680,7 +705,8 @@ Function UpdateGameState()
 				GameState=PLAY
 			EndIf
 			
-			If KeyHit(KEY_R) 
+			If KeyHit(KEY_R)
+				ClearList GameObjectList
 				ClearFPoints()
 				GameState=REMENU
 			EndIf
@@ -688,15 +714,6 @@ Function UpdateGameState()
 			If KeyHit(KEY_ESCAPE)
 				AppTerminate
 				End
-			EndIf
-			If KeyDown(KEY_4) And KeyHit(KEY_2)
-				OpenURL("https://dioptrick.wixsite.com/bajkiwujkazenka")
-			EndIf
-			If KeyDown(KEY_G) And KeyHit(KEY_M)
-				OpenURL("https://www.youtube.com/watch?v=izGwDsrQ1eQ")
-			EndIf
-			If KeyDown(KEY_S) And KeyHit(KEY_E)
-				OpenURL("https://www.youtube.com/channel/UCPB1XHFFS6pjRzpPBYh0BGg")
 			EndIf
 		FlushKeys()
 		
