@@ -34,6 +34,9 @@ Global SCORE:Int=1
 Global Points:Int=0
 Global ComboBreaker:Int
 
+Global BonusInfo:String=""
+global BonusInfoTimer:Int=75
+
 Global IntroTimeWait:Int=150
 
 Global BallSpeedX:Int=Rand(3,12)
@@ -113,12 +116,28 @@ CreateBricks()
 Repeat
 	SetColor 255,255,255
 	Cls
-	If GameState=PLAY Or GameState=PAUSE
+	If GameState=PLAY 'Or GameState=PAUSE
 		SetColor(0,235,0)
 		DrawText("Balls: "+HEALTH,(Width/2)-100,6)
 		DrawText("Combo: "+ComboBreaker,1120,6)
 		DrawText("Points: "+Points, 250, 6 )
 		SetColor(255,255,255)
+		
+		DrawText(BonusInfo, (Width/2)-50, Height/2)
+		
+		If BonusInfo="+1 BALL!!!"
+			BonusInfoTimer=BonusInfoTimer-1
+		EndIf
+		
+		If BonusInfo="BONUS BALL!!!"
+			BonusInfoTimer=BonusInfoTimer-1
+		EndIf
+		
+		If BonusInfoTimer=0
+			BonusInfo=""
+			BonusInfoTimer=75
+		EndIf
+		
 	EndIf	
 	UpdateGameState()
 	
@@ -126,6 +145,7 @@ Repeat
 		o.DrawSelf()
 		o.UpdateSelf()
 	Next
+	
 	Flip() 
 Forever
 
@@ -321,7 +341,8 @@ Type TBonusBall Extends TGameObject
         SetRotation Rotation
         If CollideImage(Image,X,Y,0,PLAYER_LAYER,1)
 			PlaySound PCS
-           YSpeed=-YSpeed
+			Y=645
+            YSpeed=-YSpeed
         EndIf
 
 		For Local b:TBricks=EachIn GameObjectList
@@ -519,12 +540,14 @@ Function UpdateGameState()
 			If randballspawn=48 
 				TBonusBall.Create(LoadImage("Data\Ball\bonusball.png"),puddlex,puddley)
 				Points=Points+2
+				BonusInfo="BONUS BALL!!!"
 				randballspawn=0
 			EndIf
 			
 			If randballspawn=46
 				HEALTH=HEALTH+1
 				Points=Points+2
+				BonusInfo="+1 BALL!!!"
 				randballspawn=0
 			EndIf
 			
@@ -533,7 +556,7 @@ Function UpdateGameState()
             If KeyHit(KEY_ESCAPE)
 				ClearList GameObjectList
 				TText.Create("BRICK BREAKER",Font,(Width/2)-100,5)    
-				TText.Create("PRESS <ENTER> To START",Font,110,250)
+				TText.Create("PRESS <ENTER> TO START",Font,110,250)
 				TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 				TText.Create("Your Score: "+Points,Font,80,400)'Points
 				TText.Create("CONTROLS: Left and Right arrow to control Puddle, Space to Pause, Escape to enter to the menu",Font,10,570)
@@ -548,7 +571,7 @@ Function UpdateGameState()
 			
 			If HEALTH=0
 				TText.Create("You are out of balls!",Font,300,5)    
-				TText.Create("PRESS <ENTER> To RESTART",Font,110,250)
+				TText.Create("PRESS <ENTER> TO RESTART",Font,110,250)
 				TText.Create("PRESS <ESCAPE> TO EXIT",Font,110,300)
 				TText.Create("Your Score: "+Points,Font,80,400)'Points
 				TText.Create("CONTROLS: Left and Right arrow to control Puddle, Space to Pause, Escape to enter to the menu",Font,10,570)
@@ -563,7 +586,7 @@ Function UpdateGameState()
 			            
             If KeyHit(KEY_SPACE)
                GameState=PLAY
-               For Local o:TText=EachIn GameObjectList
+                For Local o:TText=EachIn GameObjectList
                     ListRemove(GameObjectList,o)
                 Next
 				TScore.Create("BRICKS:",Font,20,5)
@@ -652,7 +675,12 @@ Function UpdateGameState()
             EndIf
 
 			If KeyHit(KEY_ESCAPE)
-				End
+				ClearList GameObjectList
+				TBall.Create(LoadImage("Data\Ball\"+ball),Width/2,500)
+    			TPaddle.Create(LoadImage("Data\Player\"+player),Width/2,0)
+				TDeadzone.Create(LoadImage("Data\Player\deadzone.png"),650,716)
+    			CreateBricks()
+			GameState=MENU
             EndIf
 
 			FlushKeys()
